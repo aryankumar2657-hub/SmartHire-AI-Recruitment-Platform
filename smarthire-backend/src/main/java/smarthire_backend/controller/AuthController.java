@@ -28,21 +28,38 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/register")
-    public AuthResponse register(@RequestBody RegisterRequest request) {
-        User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
+  @PostMapping("/register")
+public AuthResponse register(@RequestBody RegisterRequest request) {
 
-        userRepository.save(user);
-
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
-
-        return new AuthResponse(token, user.getRole(), user.getName());
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        throw new RuntimeException("Email already in use");
     }
 
+    User user = new User();
+
+    user.setName(request.getName());
+    user.setEmail(request.getEmail());
+    user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+    if (request.getRole() != null) {
+        user.setRole(request.getRole());
+    } else {
+        user.setRole("HR");
+    }
+
+    userRepository.save(user);
+
+    String token = jwtUtil.generateToken(
+            user.getEmail(),
+            user.getRole()
+    );
+
+    return new AuthResponse(
+            token,
+            user.getRole(),
+            user.getName()
+    );
+}
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
