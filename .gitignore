@@ -1,6 +1,0 @@
-node_modules/
-target/
-.env
-
-smarthire-backend/src/main/resources/application.properties
-git status
